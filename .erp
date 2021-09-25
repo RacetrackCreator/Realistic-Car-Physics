@@ -2,10 +2,10 @@
 <ERPSettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <showSceneName>true</showSceneName>
   <showProjectName>true</showProjectName>
-  <resetOnSceneChange>false</resetOnSceneChange>
+  <resetOnSceneChange>true</resetOnSceneChange>
   <debugMode>false</debugMode>
   <EditorClosed>true</EditorClosed>
-  <LastTimestamp>1632446845</LastTimestamp>
-  <LastSessionID>4858285792376733678</LastSessionID>
+  <LastTimestamp>1632563226</LastTimestamp>
+  <LastSessionID>8344271820926917097</LastSessionID>
   <Errored>false</Errored>
 </ERPSettings>

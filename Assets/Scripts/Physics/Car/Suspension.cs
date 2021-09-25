@@ -6,15 +6,20 @@ public class Suspension : MonoBehaviour
 {
     private Rigidbody rb;
     private Car car;
-
     [HideInInspector]
     public Vector3 Velocity;
+
+    [Header("Editor Asignments")]
+    public Wheel wheel;
 
     [Header("Suspension Attributes")]
     public float susDist;
     public Vector3 susDir;
-    [Header("Spring Attributes")]
 
+    [Range(3, 31)] [Tooltip("An odd number greater or equal to 3 is recomended")]
+    public int raycastN;
+
+    [Header("Spring Attributes")]
     public float springK;
 
     [Header("Damper Attributes")]
@@ -53,14 +58,36 @@ public class Suspension : MonoBehaviour
             totalForce = springForce + damperForce;
             Vector3 forcePos = transform.position;
             rb.AddForceAtPosition(totalForce, forcePos, ForceMode.Force);
+
+            wheel.transform.position = hit.point - rb.transform.rotation * susDir * wheel.radius;
         }
+        else
+        {
+            wheel.transform.position = transform.position + rb.transform.rotation * susDir * (susDist - wheel.radius);
+        }
+        wheel.transform.rotation = transform.rotation;
     }
     [ExecuteInEditMode]
     public void OnDrawGizmos()
     {
-        rb = GetComponentInParent<Rigidbody>();
         Gizmos.color = Color.white;
-        Gizmos.DrawLine(transform.position, transform.position + rb.transform.rotation * susDir * susDist);
-        Gizmos.DrawSphere(transform.position + rb.transform.rotation * susDir * susDist, .1f);
+
+        rb = GetComponentInParent<Rigidbody>();
+
+        Vector3 baseVec = transform.position + rb.transform.rotation * susDir * (susDist - wheel.radius);
+
+
+        Vector3 vec1 = baseVec + new Vector3(0, 0, wheel.radius);
+        Vector3 vec2 = baseVec - new Vector3(0, 0, wheel.radius);
+
+        float totalAngle = Vector3.Angle(vec1, vec2); //Degrees
+        float angleStep = 180 / (raycastN - 1);
+
+        for(int i = 0; i < raycastN; i++) //trig in unity returns radians
+        {
+            float angle = (angleStep * i + 180) * Mathf.Deg2Rad;
+            Vector3 vecf = baseVec + Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z) * new Vector3(0, Mathf.Sin(angle), Mathf.Cos(angle)) * wheel.radius;
+            Gizmos.DrawLine(transform.position, vecf);
+        }      
     }
 }
