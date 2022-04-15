@@ -5,7 +5,7 @@ using UnityEngine;
 public class Suspension : MonoBehaviour
 {
     private Rigidbody rb;
-    private Car car;
+    public Car car;
     [HideInInspector]
     public Vector3 Velocity;
 
@@ -14,9 +14,10 @@ public class Suspension : MonoBehaviour
 
     [Header("Suspension Attributes")]
     public float susDist;
-    public Vector3 susDir;
+    public Vector3 susDirRel;
+    public Vector3 susDir; // Absolute
 
-    [Range(3, 31)] [Tooltip("An odd number greater or equal to 3 is recomended")]
+    [Range(1, 31)] [Tooltip("An odd number greater or equal to 3 is recomended")]
     public int raycastN;
 
     [Header("Spring Attributes")]
@@ -26,16 +27,22 @@ public class Suspension : MonoBehaviour
     public float damperK;
 
     [Header("Debug")]
-    public Vector3 totalForce;
+    public float totalForce;
     public float oldCompression, compressionVelocity, compression;
+    public bool wheelOnGround;
+    [HideInInspector]
+    public RaycastHit hit;
 
 
     // Start is called before the first frame update
+    [ExecuteAlways]
     void Start()
     {
-        susDir = susDir.normalized;
+        wheel = GetComponentInChildren<Wheel>();
         rb = GetComponentInParent<Rigidbody>();
-        car = rb.GetComponent<Car>();
+        if (!car)
+            car = rb.GetComponent<Car>();
+        
     }
 
     private Vector3 oldPos;
@@ -45,53 +52,65 @@ public class Suspension : MonoBehaviour
 
     }
 
-    public void FixedUpdate() //TODO make raycasts with #OnDrawGizmos() Algorythm
-    {
-        RaycastHit hit;
+    float AngleStep() {
+        return raycastN == 1 ? 0 : 180 / (raycastN - 1);
+    }
+    void UpdateGeometry() {
+        susDir = transform.TransformVector(susDirRel).normalized;
+    }
 
-        Vector3 baseVec = transform.position + rb.transform.rotation * susDir * (susDist - wheel.radius);
-        float angleStep = 180 / (raycastN - 1);
+    public void FixedUpdate() //TODO make raycasts with #OnDrawGizmos() Algorithm
+    {
+        UpdateGeometry();
+        
+        Vector3 baseVec = transform.position + susDir * (susDist - wheel.radius);
 
         if (Physics.Raycast(transform.position, susDir, out hit, susDist))
         {
             compression = susDist - hit.distance;
             compressionVelocity = (compression - oldCompression) / Time.fixedDeltaTime;
-            oldCompression = compression;
-            Vector3 springForce = -compression * springK * (rb.transform.rotation * susDir); //Spring
-            Vector3 damperForce = -compressionVelocity * damperK * (rb.transform.rotation * susDir); //Damper
+            float springForce = -compression * springK; //Spring
+            float damperForce = -compressionVelocity * damperK; //Damper
             totalForce = springForce + damperForce;
-            Vector3 forcePos = transform.position;
-            rb.AddForceAtPosition(totalForce, forcePos, ForceMode.Force);
-
-            wheel.transform.position = hit.point - rb.transform.rotation * susDir * wheel.radius;
+            totalForce = Mathf.Min(totalForce, 0);
+            wheelOnGround = true;
         }
         else
         {
-            wheel.transform.position = transform.position + rb.transform.rotation * susDir * (susDist - wheel.radius);
+            compression = 0;
+            wheelOnGround = false;
         }
-        wheel.transform.rotation = transform.rotation * Quaternion.Euler(90, 90, 0);
+        oldCompression = compression;
+
+
+        Vector3 forcePos = transform.position;
+        //rb.AddForceAtPosition(totalForce, forcePos, ForceMode.Force);
+        rb.AddForceAtPosition(-hit.normal * totalForce, hit.point, ForceMode.Force);
+        wheel.transform.position = transform.position + susDir * (susDist - compression - wheel.radius);
+
+        //wheel.transform.rotation = transform.rotation * Quaternion.Euler(90, 90, 0);
     }
     [ExecuteInEditMode]
     public void OnDrawGizmos()
     {
+        UpdateGeometry();
         Gizmos.color = Color.white;
 
         rb = GetComponentInParent<Rigidbody>();
 
-        Vector3 baseVec = transform.position + rb.transform.rotation * susDir * (susDist - wheel.radius);
+        Vector3 baseVec = transform.position + susDir * (susDist - wheel.radius);
 
 
         Vector3 vec1 = baseVec + new Vector3(0, 0, wheel.radius);
         Vector3 vec2 = baseVec - new Vector3(0, 0, wheel.radius);
 
         float totalAngle = Vector3.Angle(vec1, vec2); //Degrees
-        float angleStep = 180 / (raycastN - 1);
+        float angleStep = AngleStep(); //FIXME : Do not copy lines
 
         for(int i = 0; i < raycastN; i++) //trig in unity returns radians
         {
             float angle = (angleStep * i + 180) * Mathf.Deg2Rad;
-            Vector3 vecf = baseVec + Quaternion.Euler(0, transform.eulerAngles.y, transform.eulerAngles.z)
-                * new Vector3(0, Mathf.Sin(angle), Mathf.Cos(angle)) * wheel.radius;
+            Vector3 vecf = baseVec + transform.TransformVector(new Vector3(0, Mathf.Sin(angle), Mathf.Cos(angle))) * wheel.radius;
             Gizmos.DrawLine(transform.position, vecf);
         }      
     }

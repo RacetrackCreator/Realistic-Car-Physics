@@ -14,10 +14,14 @@ public class Engine : MonoBehaviour // Were gonna use Metric System everywhere f
     public float RPM;
 
     public float accelPedal; //0 - 1
+
+    private const float constTorque = 300f;
+
+    public Transmission transmission;
     // Start is called before the first frame update
     void Start()
     {
-        
+        transmission.engines.Add(GetComponent<Engine>());   
     }
 
     // Update is called once per frame
@@ -25,7 +29,8 @@ public class Engine : MonoBehaviour // Were gonna use Metric System everywhere f
     {
         RPM = EngineFrequency / 60;
         accelPedal = Input.GetKey(KeyCode.W) ? 1 : 0;  // for now
-        CurrentEngineTorque = accelPedal * TorqueCurve(EngineFrequency);
+        //CurrentEngineTorque = accelPedal * TorqueCurve(EngineFrequency);
+        CurrentEngineTorque = accelPedal * constTorque;
     }
 
     float TorqueCurve(float hz) //looking at rmp graph so converting Hz to rpm

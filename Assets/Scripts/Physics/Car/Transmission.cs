@@ -14,11 +14,13 @@ public class Transmission : MonoBehaviour
     public float TransmittedTorque;
     public float TransmittedAngularVelocity;
 
-    private Engine engine;
+    public List<Wheel> wheels = new List<Wheel>();
+    public List<Engine> engines = new List<Engine>();
+
     // Start is called before the first frame update
     void Start()
     {
-        engine = GetComponent<Engine>();   
+        
     }
 
     // Update is called once per frame
@@ -35,8 +37,12 @@ public class Transmission : MonoBehaviour
             print("aaaaaaaaa");
         print(Input.inputString);
 
-        TransmittedTorque = engine.CurrentEngineTorque * CurrentGearRatio * FinalDriveRatio;
-        TransmittedAngularVelocity = 2 * Mathf.PI * engine.EngineFrequency /
-            (FinalDriveRatio * CurrentGearRatio);
+        
+    }
+
+    void FixedUpdate()
+    {
+        TransmittedTorque = engines[0].CurrentEngineTorque * CurrentGearRatio * FinalDriveRatio / wheels.Count;
+        TransmittedAngularVelocity = 0;
     }
 }

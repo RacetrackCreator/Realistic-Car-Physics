@@ -5,15 +5,13 @@ using UnityEngine;
 public class Car : MonoBehaviour
 {
     private Vector3 u;
-    private Rigidbody rb;
+    [HideInInspector]
+    public Rigidbody rb;
 
 
     [Header("Body")]
     public float CoeffitientOfFriction;
     public float FrontalArea;
-
-    [Header("Wheels")]
-    public Wheel[] wheels;
 
     [Header("Constants")]
     public float AerodynamicDragConst;
@@ -39,14 +37,7 @@ public class Car : MonoBehaviour
         AerodynamicDragConst = 0.5f * CoeffitientOfFriction * FrontalArea * Constants.AirDensity;
         RollingDragConst = 30 * AerodynamicDragConst;
 
-        wheels = GetComponentsInChildren<Wheel>();
-
-        foreach(Wheel wheel in wheels)
-        {
-            if (wheel.powered)
-                PoweredWheels++;
-        }
-
+        rb.centerOfMass = new Vector3(0, 0, 0);
     }
 
     // Update is called once per frame
@@ -65,19 +56,8 @@ public class Car : MonoBehaviour
 
         //LongitudinalForce = TractionForce + BrakingForce + AerodynamicDrag + RollingResistance;
 
-        ApplyWheelForces();
-
         TotalForce = LongitudinalForce;
         rb.AddForce(TotalForce);
 
-    }
-
-    private void ApplyWheelForces()
-    {
-        foreach (Wheel wheel in wheels)
-        {
-            // -- Traction -- //
-            wheel.ApplyTransmissionTorqueAndResistances();
-        }
     }
 }
