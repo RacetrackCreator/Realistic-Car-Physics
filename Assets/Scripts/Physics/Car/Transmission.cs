@@ -33,11 +33,6 @@ public class Transmission : MonoBehaviour
         gearI = Mathf.Clamp(gearI, 0, GearRatios.Length-1);
 
         CurrentGearRatio = GearRatios[gearI];
-        if (Input.GetKeyDown(KeyCode.A))
-            print("aaaaaaaaa");
-        print(Input.inputString);
-
-        
     }
 
     void FixedUpdate()
