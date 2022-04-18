@@ -15,7 +15,7 @@ public class Engine : MonoBehaviour // Were gonna use Metric System everywhere f
 
     public float accelPedal; //0 - 1
 
-    private const float constTorque = 50f;
+    private const float constTorque = 200f;
 
     public Transmission transmission;
     // Start is called before the first frame update
